@@ -1,0 +1,13 @@
+[0m[[0m[0mdebug[0m] [0m[0m[watch] [scala-chess / Compile / console] Found inputs: /Users/ted/Documents/scala-chess/*.{java,scala},/Users/ted/Documents/scala-chess/src/main/java/**/*.{java,scala},/Users/ted/Documents/scala-chess/src/main/resources/**/*,/Users/ted/Documents/scala-chess/src/main/scala/**/*.{java,scala},/Users/ted/Documents/scala-chess/src/main/scala-2.13/**/*.{java,scala}[0m
+[0m[[0m[0mdebug[0m] [0m[0mscala-chess / Compile / console - Accepted event for /Users/ted/Documents/scala-chess/src/main/scala/chess/game/package.scala[0m
+[0m[[0m[0mdebug[0m] [0m[0mReceived Update(/Users/ted/Documents/scala-chess/src/main/scala/chess/game/package.scala,FileAttributes(isDirectory = false, isOther = false,isRegularFile = true, isSymbolicLink = false),FileAttributes(isDirectory = false, isOther = false,isRegularFile = true, isSymbolicLink = false))[0m
+[0m[[0m[0minfo[0m] [0m[0m1. Monitoring source files for scala-chess/console...[0m
+[0m[[0m[0minfo[0m] [0m[0m   Press <enter> to interrupt or '?' for more options.[0m
+[0m[[0m[0mdebug[0m] [0m[0mReceived event for path /Users/ted/Documents/scala-chess/src/main/scala/chess/game/package.scala[0m
+[0m[[0m[0mdebug[0m] [0m[0mReceived event for path /Users/ted/Documents/scala-chess/src/main/scala/chess/game/package.scala[0m
+[0m[[0m[0mdebug[0m] [0m[0mCreating update event for modified /Users/ted/Documents/scala-chess/src/main/scala/chess/game/package.scala (previous stamp: Hash(7eac6ab2098ad9868cd941887f8152dcabc2fc9f), current stamp: Hash(eb0d387618383ae6081472155ed4cc44d06dd9fb))[0m
+[0m[[0m[0mdebug[0m] [0m[0mReceived file event actions: /Users/ted/Documents/scala-chess/src/main/scala/chess/game/package.scala -> Trigger. Returning: (Update(/Users/ted/Documents/scala-chess/src/main/scala/chess/game/package.scala, 2021-Jan-31 14:24:06.632 ET),Trigger)[0m
+[0m[[0m[0minfo[0m] [0m[0mBuild triggered by /Users/ted/Documents/scala-chess/src/main/scala/chess/game/package.scala. Running 'console'.[0m
+[0m[[0m[0mdebug[0m] [0m[0m[watch] [debug] Received file event Trigger for Update(/Users/ted/Documents/scala-chess/src/main/scala/chess/game/package.scala, 2021-Jan-31 14:24:06.632 ET).[0m
+[0m[[0m[0minfo[0m] [0m[0m2. Monitoring source files for scala-chess/console...[0m
+[0m[[0m[0minfo[0m] [0m[0m   Press <enter> to interrupt or '?' for more options.[0m

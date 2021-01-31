@@ -1,0 +1,9 @@
+[0m[[0m[0mdebug[0m] [0m[0mChange report:[0m
+[0m[[0m[0mdebug[0m] [0m[0m	Checked: /Users/ted/Documents/scala-chess/src/main/scala/chess/web/Web.scala, /Users/ted/Documents/scala-chess/src/main/scala/chess/game/state.scala, /Users/ted/Documents/scala-chess/src/main/scala/chess/game/package.scala[0m
+[0m[[0m[0mdebug[0m] [0m[0m	Modified: /Users/ted/Documents/scala-chess/src/main/scala/chess/game/package.scala[0m
+[0m[[0m[0mdebug[0m] [0m[0m	Unmodified: /Users/ted/Documents/scala-chess/src/main/scala/chess/web/Web.scala, /Users/ted/Documents/scala-chess/src/main/scala/chess/game/state.scala[0m
+[0m[[0m[0mdebug[0m] [0m[0m	Added: [0m
+[0m[[0m[0mdebug[0m] [0m[0m	Removed: [0m
+[0m[[0m[0minfo[0m] [0m[0mFormatting 1 Scala sources...[0m
+[0m[[0m[0mdebug[0m] [0m[0mparsed config (v2.7.5): /Users/ted/Documents/scala-chess/.scalafmt.conf[0m
+[0m[[0m[0mdebug[0m] [0m[0mAdding repositories [https://repo1.maven.org/maven2/,file:////Users/ted/.sbt/preloaded/][0m

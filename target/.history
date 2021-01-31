@@ -1,0 +1,20 @@
+run
+l
+run
+fastLinkJS
+reload
+fastLinkJS
+~fastLinkJS
+scalafmt
+reload
+~fastLinkJS
+fastLinkJS
+~fastLinkJS
+sbt compile
+import game
+import game;
+import game;;
+import game;
+import game
+import game.Board;
+~compile

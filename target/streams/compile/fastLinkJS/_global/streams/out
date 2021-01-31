@@ -1,0 +1,22 @@
+[0m[[0m[0minfo[0m] [0m[0mFast optimizing /Users/ted/Documents/scala-chess/target/scala-2.13/scala-js-tutorial-fastopt[0m
+[0m[[0m[0mdebug[0m] [0m[0mLinker: Compute reachability: 6851 us[0m
+[0m[[0m[0mdebug[0m] [0m[0mLinker: Assemble LinkedClasses: 2266 us[0m
+[0m[[0m[0mdebug[0m] [0m[0mLinker: 24575 us[0m
+[0m[[0m[0mdebug[0m] [0m[0mOptimizer: Batch mode: false[0m
+[0m[[0m[0mdebug[0m] [0m[0mOptimizer: Incremental part: 5054 us[0m
+[0m[[0m[0mdebug[0m] [0m[0mOptimizer: Optimizing 1 methods.[0m
+[0m[[0m[0mdebug[0m] [0m[0mOptimizer: Optimizer part: 1112 us[0m
+[0m[[0m[0mdebug[0m] [0m[0mOptimizer: 6875 us[0m
+[0m[[0m[0mdebug[0m] [0m[0mRefiner: Compute reachability: 3535 us[0m
+[0m[[0m[0mdebug[0m] [0m[0mRefiner: Assemble LinkedClasses: 396 us[0m
+[0m[[0m[0mdebug[0m] [0m[0mRefiner: 4591 us[0m
+[0m[[0m[0mdebug[0m] [0m[0mModule Splitter: Calculate Dependency Info: 136 us[0m
+[0m[[0m[0mdebug[0m] [0m[0mModule Splitter: Analyze Modules: 37 us[0m
+[0m[[0m[0mdebug[0m] [0m[0mModule Splitter: Assemble Modules: 269 us[0m
+[0m[[0m[0mdebug[0m] [0m[0mModule Splitter: 610 us[0m
+[0m[[0m[0mdebug[0m] [0m[0mEmitter: Generate Classes: 17443 us[0m
+[0m[[0m[0mdebug[0m] [0m[0mEmitter: Write trees: 484 us[0m
+[0m[[0m[0mdebug[0m] [0m[0mEmitter: Class tree cache stats: reused: 51 -- invalidated: 0[0m
+[0m[[0m[0mdebug[0m] [0m[0mEmitter: Method tree cache stats: reused: 100 -- invalidated: 1[0m
+[0m[[0m[0mdebug[0m] [0m[0mEmitter: 19964 us[0m
+[0m[[0m[0mdebug[0m] [0m[0mBasicBackend: Write result: 21154 us[0m
