@@ -78,7 +78,7 @@ package object game {
     // otherwise, invalidmove.
 
     val piece = board.get(src)
-    if (piece.isEmpty() || !posChangeIsLegal(piece, src, dst)) {
+    if (piece.isEmpty || !posChangeIsLegal(piece.get._1, src, dst)) {
       return InvalidMove
     }
 
@@ -86,7 +86,7 @@ package object game {
     //
     ValidMove(
       (
-        board.updated(dst, (piece, turn)),
+        board.updated(dst, (piece.get._1, turn)),
         flipPlayer(turn),
         whiteTakes,
         blackTakes
