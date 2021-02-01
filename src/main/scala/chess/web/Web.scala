@@ -10,13 +10,21 @@ object Web {
 
   type Ctx2D = dom.CanvasRenderingContext2D
 
-  type ViewState = (Int, Int)
-
   val CanvasLength = 500
-  val BoardCoords = (.1 * CanvasLength, .1 * CanvasLength)
-  val BoardLength = .8 * CanvasLength
+  val Padding = .2
+  val BoardCoords = ((Padding / 2) * CanvasLength, (Padding / 2) * CanvasLength)
+  val BoardLength = (1 - Padding) * CanvasLength
   val GridLength = 8
   val TileSize = BoardLength.toFloat / GridLength
+
+  sealed trait Command
+  case object DoNothing extends Command
+  case class SelectTile(tile: (Int, Int)) extends Command
+  case class SubmitMove(tile1: (Int, Int), tile2: (Int, Int)) extends Command
+
+  sealed trait ViewState
+  case object NothingSelected extends ViewState
+  case class TileSelected(tile: (Int, Int)) extends ViewState
 
   def main(args: Array[String]): Unit = {
     document.addEventListener(
@@ -32,19 +40,65 @@ object Web {
           .asInstanceOf[Ctx2D]
         document.body.appendChild(canvas)
 
-        val g = initialGame
-        drawGame(canvasCtx, g, None)
+        var gameState: GameState = initialGame
+        var viewState: ViewState = NothingSelected
+        drawGame(canvasCtx, gameState, viewState)
 
         canvas.onclick = { (e: dom.MouseEvent) =>
           val selectedTile = findClickedTile(e)
-          // See if game state needs to be updated.
-          // Redraw game if necessary.
 
-          drawGame(canvasCtx, g, Some(selectedTile))
+          val command = getCommand(e, viewState)
+          gameState = updateGameState(gameState, command)
+          viewState = updateViewState(viewState, command)
+
+          drawGame(canvasCtx, gameState, viewState)
         }
 
       }
     )
+  }
+
+  def getCommand(e: dom.MouseEvent, viewState: ViewState): Command = {
+    viewState match {
+      case NothingSelected        => SelectTile(findClickedTile(e))
+      case TileSelected(prevTile) => SubmitMove(prevTile, findClickedTile(e))
+    }
+  }
+
+  def updateViewState(viewState: ViewState, command: Command): ViewState = {
+    (viewState, command) match {
+      case (NothingSelected, SelectTile(tile)) => TileSelected(tile)
+      case (TileSelected(_), SelectTile(_))    => NothingSelected
+
+      case (TileSelected(_), SubmitMove(_, _)) => NothingSelected // Impossible
+      case (NothingSelected, SubmitMove(_, _)) => NothingSelected // Impossible
+
+      case (s, DoNothing) => s
+    }
+  }
+
+  def submitMove(
+      tile1: (Int, Int),
+      tile2: (Int, Int),
+      gameState: GameState
+  ): GameState = {
+    val src = Location(tile1._1, (tile1._2 + 97).toChar)
+    val dst = Location(tile2._1, (tile2._2 + 97).toChar)
+
+    move(gameState, src, dst) match {
+      case InvalidMove             => gameState
+      case ValidMove(newGameState) => newGameState
+    }
+  }
+
+  def updateGameState(gameState: GameState, command: Command): GameState = {
+    val (board, _, _, _) = gameState
+
+    command match {
+      case DoNothing          => gameState
+      case SelectTile(_)      => gameState
+      case SubmitMove(t1, t2) => submitMove(t1, t2, gameState)
+    }
   }
 
   def pieceToString(p: Piece): String = {
@@ -65,8 +119,11 @@ object Web {
   def drawGame(
       ctx: Ctx2D,
       gameState: GameState,
-      viewState: Option[ViewState]
+      viewState: ViewState
   ) = {
+
+    ctx.clearRect(0, 0, CanvasLength, CanvasLength)
+
     ctx.strokeStyle = "black"
     ctx.lineWidth = 2
     ctx.beginPath()
@@ -87,10 +144,12 @@ object Web {
           TileSize
         )
 
-        if (viewState.isDefined) {
-          if ((i, j) == viewState.get) {
-            ctx.fillRect(i * TileSize, j * TileSize, TileSize, TileSize)
-          }
+        viewState match {
+          case NothingSelected => ()
+          case TileSelected(tile) =>
+            if ((i, j) == tile) {
+              ctx.fillRect(i * TileSize, j * TileSize, TileSize, TileSize)
+            }
         }
 
         val piece = board.get(Location(i - 1, (j + 97).toChar))
