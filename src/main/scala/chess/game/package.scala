@@ -49,6 +49,8 @@ package object game {
     Location(1, 'h') -> (Rook, White)
   )
 
+  val initialGame: GameState = (initialBoard, White, List(), List())
+
   private def posChangeIsLegal(
       piece: Piece,
       src: Location,
