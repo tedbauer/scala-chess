@@ -73,9 +73,20 @@ package object game {
       dst: Location
   ): Boolean = {
     piece match {
+      case Queen =>
+        ((dst.col - src.col.toInt).abs == (dst.row - src.row.toInt).abs) ||
+          (dst.col == src.col && dst.row != src.row) ||
+          (dst.row == src.row && dst.col != src.col)
+      case King =>
+        val colChange = (dst.col - src.col.toInt).abs
+        val rowChange = (dst.row - src.row.toInt).abs
+        colChange <= 1 && rowChange <= 1 && (colChange != 0 || rowChange != 0)
+      case Rook =>
+        (dst.col == src.col && dst.row != src.row) ||
+          (dst.row == src.row && dst.col != src.col)
       case Bishop =>
         (dst.col - src.col.toInt).abs == (dst.row - src.row.toInt).abs
-      case _ => false
+      case _ => false //FIXME
     }
   }
 

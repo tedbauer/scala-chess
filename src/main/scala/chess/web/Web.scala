@@ -39,6 +39,9 @@ object Web {
           .getContext("2d")
           .asInstanceOf[Ctx2D]
 
+        val canvasRect = canvas.getBoundingClientRect()
+        val canvasLeftTop = (canvasRect.left, canvasRect.top)
+
         document.body.appendChild(canvas)
 
         var gameState: GameState = initialGame
@@ -46,7 +49,7 @@ object Web {
         drawGame(canvasCtx, gameState, viewState)
 
         canvas.onclick = { (e: dom.MouseEvent) =>
-          val command = getCommand(e, viewState)
+          val command = getCommand(e, canvasLeftTop, viewState)
           gameState = updateGameState(gameState, command)
           viewState = updateViewState(viewState, command)
 
@@ -57,10 +60,15 @@ object Web {
     )
   }
 
-  def getCommand(e: dom.MouseEvent, viewState: ViewState): Command = {
+  def getCommand(
+      e: dom.MouseEvent,
+      canvasLeftTop: (Double, Double),
+      viewState: ViewState
+  ): Command = {
     viewState match {
-      case NothingSelected        => SelectTile(findClickedTile(e))
-      case TileSelected(prevTile) => SubmitMove(prevTile, findClickedTile(e))
+      case NothingSelected => SelectTile(findClickedTile(e, canvasLeftTop))
+      case TileSelected(prevTile) =>
+        SubmitMove(prevTile, findClickedTile(e, canvasLeftTop))
     }
   }
 
@@ -121,10 +129,20 @@ object Web {
     }
   }
 
-  def findClickedTile(e: dom.MouseEvent): (Int, Int) = {
+  def findClickedTile(
+      e: dom.MouseEvent,
+      canvasLeftTop: (Double, Double)
+  ): (Int, Int) = {
+    val x = e.clientX - canvasLeftTop._1
+    val y = e.clientY - canvasLeftTop._2
+    println("==")
+    println(x)
+    println(y)
+    println(canvasLeftTop._2)
+    println("==")
     val res = (
-      ((e.clientX - BoardCoords._1) / TileSize).toInt,
-      ((e.clientY - BoardCoords._2) / TileSize).toInt
+      ((e.clientX - canvasLeftTop._1 - BoardCoords._1) / TileSize).toInt,
+      ((e.clientY - canvasLeftTop._2 - BoardCoords._2) / TileSize).toInt
     )
     println("clicked tile:")
     println(res)
@@ -182,23 +200,27 @@ object Web {
           case NothingSelected => ()
           case TileSelected(tile) =>
             if ((i, j) == tile) {
+              ctx.fillStyle = "green"
               ctx.fillRect(
                 i * TileSize + BoardCoords._1,
                 j * TileSize + BoardCoords._2,
                 TileSize,
                 TileSize
               )
+              ctx.fillStyle = "black"
             }
         }
 
         val piece = board.get(tileToLocation((i, j)))
         piece match {
           case Some(p) =>
+            ctx.fillStyle = "brown"
             ctx.fillText(
               pieceToString(p._1),
               i * TileSize + BoardCoords._1 + TileSize / 4,
               (j + 1) * TileSize + BoardCoords._2 - TileSize / 2
             )
+            ctx.fillStyle = "black"
           case None => ()
         }
       }
