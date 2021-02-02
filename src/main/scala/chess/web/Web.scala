@@ -38,6 +38,7 @@ object Web {
         val canvasCtx = canvas
           .getContext("2d")
           .asInstanceOf[Ctx2D]
+
         document.body.appendChild(canvas)
 
         var gameState: GameState = initialGame
@@ -45,8 +46,6 @@ object Web {
         drawGame(canvasCtx, gameState, viewState)
 
         canvas.onclick = { (e: dom.MouseEvent) =>
-          val selectedTile = findClickedTile(e)
-
           val command = getCommand(e, viewState)
           gameState = updateGameState(gameState, command)
           viewState = updateViewState(viewState, command)
@@ -68,13 +67,19 @@ object Web {
   def updateViewState(viewState: ViewState, command: Command): ViewState = {
     (viewState, command) match {
       case (NothingSelected, SelectTile(tile)) => TileSelected(tile)
-      case (TileSelected(_), SelectTile(_))    => NothingSelected
+      case (TileSelected(_), SelectTile(_))    => println("wat"); NothingSelected
 
-      case (TileSelected(_), SubmitMove(_, _)) => NothingSelected // Impossible
-      case (NothingSelected, SubmitMove(_, _)) => NothingSelected // Impossible
+      case (TileSelected(_), SubmitMove(_, _)) =>
+        println("impossible"); NothingSelected // Impossible
+      case (NothingSelected, SubmitMove(_, _)) =>
+        println("impossible"); NothingSelected // Impossible
 
       case (s, DoNothing) => s
     }
+  }
+
+  def tileToLocation(tile: (Int, Int)): Location = {
+    Location(GridLength - tile._2, (tile._1 + 97).toChar)
   }
 
   def submitMove(
@@ -82,8 +87,11 @@ object Web {
       tile2: (Int, Int),
       gameState: GameState
   ): GameState = {
-    val src = Location(tile1._1, (tile1._2 + 97).toChar)
-    val dst = Location(tile2._1, (tile2._2 + 97).toChar)
+    val src = tileToLocation(tile1)
+    val dst = tileToLocation(tile2)
+
+    println(src);
+    println(dst);
 
     move(gameState, src, dst) match {
       case InvalidMove             => gameState
@@ -95,9 +103,10 @@ object Web {
     val (board, _, _, _) = gameState
 
     command match {
-      case DoNothing          => gameState
-      case SelectTile(_)      => gameState
-      case SubmitMove(t1, t2) => submitMove(t1, t2, gameState)
+      case DoNothing     => gameState
+      case SelectTile(_) => gameState
+      case SubmitMove(t1, t2) =>
+        println(t1); println(t2); submitMove(t1, t2, gameState)
     }
   }
 
@@ -113,7 +122,13 @@ object Web {
   }
 
   def findClickedTile(e: dom.MouseEvent): (Int, Int) = {
-    ((e.clientX / TileSize).toInt, (e.clientY / TileSize).toInt)
+    val res = (
+      ((e.clientX - BoardCoords._1) / TileSize).toInt,
+      ((e.clientY - BoardCoords._2) / TileSize).toInt
+    )
+    println("clicked tile:")
+    println(res)
+    return res
   }
 
   def drawGame(
@@ -135,8 +150,18 @@ object Web {
     var i = 0
     var j = 0
     for (i <- 0 until GridLength) {
-      ctx.fillText(i.toString(), i * 40 + 15, 32)
       for (j <- 0 until GridLength) {
+        ctx.fillText(
+          (GridLength - j).toString(),
+          BoardCoords._1 / 2,
+          j * TileSize + BoardCoords._2 + TileSize / 2
+        )
+
+        ctx.fillText(
+          (i + 97).toChar.toString,
+          i * TileSize + BoardCoords._1 + TileSize / 2,
+          BoardCoords._1 / 2
+        )
         ctx.rect(
           BoardCoords._1 + i * TileSize,
           BoardCoords._2 + j * TileSize,
@@ -144,18 +169,36 @@ object Web {
           TileSize
         )
 
+        if (i % 2 != 0 && j % 2 == 0 || i % 2 == 0 && j % 2 != 0) {
+          ctx.fillRect(
+            i * TileSize + BoardCoords._1,
+            j * TileSize + BoardCoords._2,
+            TileSize,
+            TileSize
+          )
+        }
+
         viewState match {
           case NothingSelected => ()
           case TileSelected(tile) =>
             if ((i, j) == tile) {
-              ctx.fillRect(i * TileSize, j * TileSize, TileSize, TileSize)
+              ctx.fillRect(
+                i * TileSize + BoardCoords._1,
+                j * TileSize + BoardCoords._2,
+                TileSize,
+                TileSize
+              )
             }
         }
 
-        val piece = board.get(Location(i - 1, (j + 97).toChar))
+        val piece = board.get(tileToLocation((i, j)))
         piece match {
           case Some(p) =>
-            ctx.fillText(pieceToString(p._1), i * 40 + 20, j * 40 + 20)
+            ctx.fillText(
+              pieceToString(p._1),
+              i * TileSize + BoardCoords._1 + TileSize / 4,
+              (j + 1) * TileSize + BoardCoords._2 - TileSize / 2
+            )
           case None => ()
         }
       }

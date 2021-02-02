@@ -46,7 +46,23 @@ package object game {
     Location(1, 'e') -> (King, White),
     Location(1, 'f') -> (Knight, White),
     Location(1, 'g') -> (Bishop, White),
-    Location(1, 'h') -> (Rook, White)
+    Location(1, 'h') -> (Rook, White),
+    Location(7, 'a') -> (Pawn, Black),
+    Location(7, 'b') -> (Pawn, Black),
+    Location(7, 'c') -> (Pawn, Black),
+    Location(7, 'd') -> (Pawn, Black),
+    Location(7, 'e') -> (Pawn, Black),
+    Location(7, 'f') -> (Pawn, Black),
+    Location(7, 'g') -> (Pawn, Black),
+    Location(7, 'h') -> (Pawn, Black),
+    Location(8, 'a') -> (Rook, Black),
+    Location(8, 'b') -> (Bishop, Black),
+    Location(8, 'c') -> (Knight, Black),
+    Location(8, 'd') -> (Queen, Black),
+    Location(8, 'e') -> (King, Black),
+    Location(8, 'f') -> (Knight, Black),
+    Location(8, 'g') -> (Bishop, Black),
+    Location(8, 'h') -> (Rook, Black)
   )
 
   val initialGame: GameState = (initialBoard, White, List(), List())
@@ -81,19 +97,23 @@ package object game {
 
     val piece = board.get(src)
     if (piece.isEmpty || !posChangeIsLegal(piece.get._1, src, dst)) {
+      println("invalidmove")
       return InvalidMove
     }
 
     // if the dst piece is the same as whose turn it is, the move is illegal
     //
-    ValidMove(
+    val ret = ValidMove(
       (
-        board.updated(dst, (piece.get._1, turn)),
+        board.updated(dst, (piece.get._1, turn)) - src,
         flipPlayer(turn),
         whiteTakes,
         blackTakes
       )
     )
+
+    println(ret);
+    return ret
 
   }
 
