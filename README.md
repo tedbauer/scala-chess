@@ -2,8 +2,8 @@
 
 ## Setup
 
-Generate JS for `index-dev.html`:
+    $ brew install sbt   # Install `sbt`.
+    $ sbt fastLinkJS     # Build `index-dev.html`.
 
-    $ sbt fastLinkJS
-
-Use `~fastLinkJS` to "watch" files and re-compile every time there's a file update.
+Also, you can enter the `sbt` console and type `~fastLinkJS`, and then on
+every file update `index-dev.html` will be automatically recompiled.

@@ -108,8 +108,6 @@ object Web {
   }
 
   def updateGameState(gameState: GameState, command: Command): GameState = {
-    val (board, _, _, _) = gameState
-
     command match {
       case DoNothing     => gameState
       case SelectTile(_) => gameState
@@ -119,7 +117,7 @@ object Web {
   }
 
   def pieceToString(p: Piece): String = {
-    p match {
+    p.pieceType match {
       case Queen  => "Queen"
       case King   => "King"
       case Rook   => "Rook"
@@ -162,8 +160,6 @@ object Web {
     ctx.beginPath()
 
     ctx.rect(0, 0, CanvasLength, CanvasLength)
-
-    val (board, _, _, _) = gameState
 
     var i = 0
     var j = 0
@@ -211,12 +207,12 @@ object Web {
             }
         }
 
-        val piece = board.get(tileToLocation((i, j)))
+        val piece = gameState.board.get(tileToLocation((i, j)))
         piece match {
           case Some(p) =>
             ctx.fillStyle = "brown"
             ctx.fillText(
-              pieceToString(p._1),
+              pieceToString(p),
               i * TileSize + BoardCoords._1 + TileSize / 4,
               (j + 1) * TileSize + BoardCoords._2 - TileSize / 2
             )
