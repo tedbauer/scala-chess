@@ -35,6 +35,8 @@ package object game {
   case class ValidMove(s: GameState) extends MoveResult
   case object InvalidMove extends MoveResult
 
+  case class Move(src: Location, dst: Location)
+
   val initialBoard: Board = HashMap(
     Location(2, 'a') -> Piece(Pawn, White),
     Location(2, 'b') -> Piece(Pawn, White),
@@ -73,35 +75,48 @@ package object game {
   val initialGame: GameState = GameState(initialBoard, White, List(), List())
 
   private def moveIsLegal(
-      piece: Piece,
-      turn: Player,
-      src: Location,
-      dst: Location
+      state: GameState,
+      move: Move
   ): Boolean = {
-    piece.owner == turn && (piece.pieceType match {
-      case Queen =>
-        ((dst.col - src.col.toInt).abs == (dst.row - src.row.toInt).abs) ||
-          (dst.col == src.col && dst.row != src.row) ||
-          (dst.row == src.row && dst.col != src.col)
-      case King =>
-        val colChange = (dst.col - src.col.toInt).abs
-        val rowChange = (dst.row - src.row.toInt).abs
-        colChange <= 1 && rowChange <= 1 && (colChange != 0 || rowChange != 0)
-      case Rook =>
-        (dst.col == src.col && dst.row != src.row) ||
-          (dst.row == src.row && dst.col != src.col)
-      case Bishop =>
-        (dst.col - src.col.toInt).abs == (dst.row - src.row.toInt).abs
-      case Pawn =>
-        dst.row == src.row && (
-          (turn == White && dst.col == src.col + 1) ||
-            (turn == Black && dst.col == src.col - 1)
-        )
-      case Knight =>
-        val colChange = (dst.col - src.col.toInt).abs
-        val rowChange = (dst.row - src.row.toInt).abs
-        (colChange == 2 && rowChange == 1) || (rowChange == 2 && colChange == 1)
-    })
+    state.board.get(move.src) map { piece =>
+      piece.owner == state.currentTurn && (piece.pieceType match {
+        case Queen =>
+          val colChange = (move.dst.col - move.src.col.toInt).abs
+          val rowChange = (move.dst.row - move.src.row.toInt).abs
+          colChange == rowChange ||
+          (move.dst.col == move.src.col && move.dst.row != move.src.row) ||
+          (move.dst.row == move.src.row && move.dst.col != move.src.col)
+        case King =>
+          val colChange = (move.dst.col - move.src.col.toInt).abs
+          val rowChange = (move.dst.row - move.src.row.toInt).abs
+          colChange <= 1 && rowChange <= 1 && (colChange != 0 || rowChange != 0)
+        case Rook =>
+          (move.dst.col == move.src.col && move.dst.row != move.src.row) ||
+            (move.dst.row == move.src.row && move.dst.col != move.src.col)
+        case Bishop =>
+          val colChange = (move.dst.col - move.src.col.toInt).abs
+          val rowChange = (move.dst.row - move.src.row.toInt).abs
+          colChange == rowChange
+        case Pawn =>
+          val colChange = move.dst.col - move.src.col.toInt
+          val rowChange = (move.dst.row - move.src.row.toInt).abs
+          val canAttack = (state.currentTurn, state.board.get(move.dst)) match {
+            case (White, Some(Piece(_, Black))) =>
+              colChange == 1 && rowChange == 1
+            case (Black, Some(Piece(_, White))) =>
+              colChange == -1 && rowChange == 1
+            case _ => false
+          }
+          canAttack || move.dst.row == move.src.row && (
+            (state.currentTurn == White && move.dst.col == move.src.col + 1) ||
+              (state.currentTurn == Black && move.dst.col == move.src.col - 1)
+          )
+        case Knight =>
+          val colChange = (move.dst.col - move.src.col.toInt).abs
+          val rowChange = (move.dst.row - move.src.row.toInt).abs
+          (colChange == 2 && rowChange == 1) || (rowChange == 2 && colChange == 1)
+      })
+    } getOrElse false
   }
 
   private def flipPlayer(player: Player): Player = {
@@ -111,42 +126,38 @@ package object game {
     }
   }
 
-  def move(state: GameState, src: Location, dst: Location): MoveResult = {
-
-    // 1. check out the src. No piece? invalid move; piece?...
-    //. check out the dst. no person? if it's valid, cool
-    //     there is a person? then..
-    //       if there's a friend, then invalidmove
-    // .     if there's an enemy, then if it's valid, cool, and take the dst piece
-
-    //
-
-    state.board.get(src) map { srcPiece =>
-      state.board.get(dst) map { dstPiece =>
+  def makeMove(state: GameState, move: Move): MoveResult = {
+    state.board.get(move.src) map { srcPiece =>
+      state.board.get(move.dst) map { dstPiece =>
         if (dstPiece.owner == state.currentTurn) {
           InvalidMove
         } else {
-          if (moveIsLegal(piece, state.currentTurn, src, dst)) {
+          if (moveIsLegal(state, move)) {
             ValidMove(
               GameState(
-                (state.board - dst).updated(dst, piece)
+                (state.board - move.dst).updated(move.dst, srcPiece) - move.src,
+                flipPlayer(state.currentTurn),
+                if (state.currentTurn == White) dstPiece :: state.whitePrison
+                else state.whitePrison,
+                if (state.currentTurn == Black) dstPiece :: state.blackPrison
+                else state.blackPrison
               )
             )
+          } else {
+            InvalidMove
           }
         }
-      }
-
-      if (moveIsLegal(piece, state.currentTurn, src, dst)) {
-        ValidMove(
-          GameState(
-            state.board.updated(dst, piece) - src,
-            flipPlayer(state.currentTurn),
-            state.whitePrison,
-            state.blackPrison
+      } getOrElse {
+        if (moveIsLegal(state, move)) {
+          ValidMove(
+            GameState(
+              state.board.updated(move.dst, srcPiece) - move.src,
+              flipPlayer(state.currentTurn),
+              state.whitePrison,
+              state.blackPrison
+            )
           )
-        )
-      } else {
-        InvalidMove
+        } else { InvalidMove }
       }
     } getOrElse InvalidMove
   }

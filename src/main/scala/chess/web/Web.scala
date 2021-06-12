@@ -101,7 +101,7 @@ object Web {
     println(src);
     println(dst);
 
-    move(gameState, src, dst) match {
+    makeMove(gameState, Move(src, dst)) match {
       case InvalidMove             => gameState
       case ValidMove(newGameState) => newGameState
     }
@@ -223,5 +223,14 @@ object Web {
     }
 
     ctx.stroke()
+    ctx.strokeStyle = "green"
+    gameState.currentTurn match {
+      case White =>
+        ctx.fillText("Turn: White", BoardLength - 5, BoardLength + 70)
+      case Black =>
+        ctx.fillText("Turn: Black", BoardLength - 5, BoardLength + 70)
+    }
+    ctx.stroke()
+
   }
 }
