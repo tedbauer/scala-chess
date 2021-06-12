@@ -74,10 +74,7 @@ package object game {
 
   val initialGame: GameState = GameState(initialBoard, White, List(), List())
 
-  private def moveIsLegal(
-      state: GameState,
-      move: Move
-  ): Boolean = {
+  private def moveIsLegal(state: GameState, move: Move): Boolean = {
     state.board.get(move.src) map { piece =>
       piece.owner == state.currentTurn && (piece.pieceType match {
         case Queen =>
