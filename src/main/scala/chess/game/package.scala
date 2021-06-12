@@ -1,4 +1,5 @@
 import scala.collection.immutable.HashMap
+import scala.collection.mutable.HashSet
 
 package object game {
 
@@ -37,6 +38,8 @@ package object game {
 
   case class Move(src: Location, dst: Location)
 
+  type PossibleMovesMap = Map[Piece, Set[Location]]
+
   val initialBoard: Board = HashMap(
     Location(2, 'a') -> Piece(Pawn, White),
     Location(2, 'b') -> Piece(Pawn, White),
@@ -60,6 +63,7 @@ package object game {
     Location(7, 'd') -> Piece(Pawn, Black),
     Location(7, 'e') -> Piece(Pawn, Black),
     Location(7, 'f') -> Piece(Pawn, Black),
+    Location(3, 'd') -> Piece(King, Black), //delete me
     Location(7, 'g') -> Piece(Pawn, Black),
     Location(7, 'h') -> Piece(Pawn, Black),
     Location(8, 'a') -> Piece(Rook, Black),
@@ -105,8 +109,8 @@ package object game {
             case _ => false
           }
           canAttack || move.dst.row == move.src.row && (
-            (state.currentTurn == White && move.dst.col == move.src.col + 1) ||
-              (state.currentTurn == Black && move.dst.col == move.src.col - 1)
+            (state.currentTurn == White && colChange == 1) ||
+              (state.currentTurn == Black && colChange == -1)
           )
         case Knight =>
           val colChange = (move.dst.col - move.src.col.toInt).abs
@@ -123,13 +127,89 @@ package object game {
     }
   }
 
+  // bishop:
+  // +1 row and col until we hit a piece.
+  // -1 row and col until we hit a piece.
+  // -1 row +1 col until we hit a piece.
+  // +1 row -1 col until we hit a piece.
+
+  private def possibleMoves(
+      piece: Piece,
+      location: Location,
+      board: Board
+  ): HashSet[Location] = {
+    val moves: HashSet[Location] = HashSet()
+
+    val spotIsEmpty = (i: Int, j: Int) => {
+      (location.col + i) <= 8 && (location.row.toInt - 96 + j) <= 8 && (location.col + i) >= 1 && (location.row.toInt - 96 + j) >= 1 &&
+        board
+          .get(Location(location.col + i, (location.row + j).toChar))
+          .isEmpty
+    }
+
+    val addMove = (i: Int, j: Int) =>
+      moves.add(Location(location.col + i, (location.row + j).toChar))
+
+    val attackableTarget = (i: Int, j: Int, targetPlayer: Player) => {
+      board
+        .get(Location(location.col + i, (location.row + j).toChar))
+        .exists(_.owner == targetPlayer)
+    }
+
+    var i = 1;
+    piece.pieceType match {
+      case Bishop =>
+        i = 1; while (spotIsEmpty(i, i)) { addMove(i, i); i += 1 }
+        i = 1; while (spotIsEmpty(-i, i)) { addMove(-i, i); i += 1 }
+        i = 1; while (spotIsEmpty(i, -i)) { addMove(i, -i); i += 1 }
+        i = 1; while (spotIsEmpty(-i, -i)) { addMove(-i, -i); i += 1 }
+      case Rook =>
+        i = 1; while (spotIsEmpty(i, 0)) { addMove(i, 0); i += 1 }
+        i = 1; while (spotIsEmpty(0, i)) { addMove(0, i); i += 1 }
+        i = 1; while (spotIsEmpty(-i, 0)) { addMove(-i, 0); i += 1 }
+        i = 1; while (spotIsEmpty(0, -i)) { addMove(0, -i); i += 1 }
+      case Queen =>
+        i = 1; while (spotIsEmpty(i, 0)) { addMove(i, 0); i += 1 }
+        i = 1; while (spotIsEmpty(0, i)) { addMove(0, i); i += 1 }
+        i = 1; while (spotIsEmpty(-i, 0)) { addMove(-i, 0); i += 1 }
+        i = 1; while (spotIsEmpty(0, -i)) { addMove(0, -i); i += 1 }
+        i = 1; while (spotIsEmpty(i, i)) { addMove(i, i); i += 1 }
+        i = 1; while (spotIsEmpty(-i, i)) { addMove(-i, i); i += 1 }
+        i = 1; while (spotIsEmpty(i, -i)) { addMove(i, -i); i += 1 }
+        i = 1; while (spotIsEmpty(-i, -i)) { addMove(-i, -i); i += 1 }
+      case King =>
+        addMove(1, 0); addMove(0, 1); addMove(-1, 0); addMove(0, -1)
+        addMove(1, 1); addMove(-1, 1); addMove(1, -1); addMove(-1, -1)
+      case Pawn =>
+        addMove(1, 0)
+        piece.owner match {
+          case White => {
+            if (attackableTarget(1, 1, Black)) addMove(1, 1)
+            if (attackableTarget(1, -1, Black)) addMove(1, -1)
+          }
+          case Black => {
+            if (attackableTarget(-1, 1, White)) addMove(-1, 1)
+            if (attackableTarget(-1, -1, White)) addMove(-1, -1)
+          }
+        }
+      case Knight =>
+        addMove(2, 1); addMove(-2, 1); addMove(2, -1); addMove(-2, -1)
+        addMove(1, 2); addMove(-1, 2); addMove(1, -2); addMove(-1, -2)
+    }
+    moves
+  }
+
+  private def legalMove(state: GameState, move: Move): Boolean = {
+    state.board.get(move.src).exists(_.owner == state.currentTurn)
+  }
+
   def makeMove(state: GameState, move: Move): MoveResult = {
     state.board.get(move.src) map { srcPiece =>
       state.board.get(move.dst) map { dstPiece =>
         if (dstPiece.owner == state.currentTurn) {
           InvalidMove
         } else {
-          if (moveIsLegal(state, move)) {
+          if (legalMove(state, move)) {
             ValidMove(
               GameState(
                 (state.board - move.dst).updated(move.dst, srcPiece) - move.src,
@@ -145,7 +225,7 @@ package object game {
           }
         }
       } getOrElse {
-        if (moveIsLegal(state, move)) {
+        if (legalMove(state, move)) {
           ValidMove(
             GameState(
               state.board.updated(move.dst, srcPiece) - move.src,
