@@ -78,48 +78,6 @@ package object game {
 
   val initialGame: GameState = GameState(initialBoard, White, List(), List())
 
-  private def moveIsLegal(state: GameState, move: Move): Boolean = {
-    state.board.get(move.src) map { piece =>
-      piece.owner == state.currentTurn && (piece.pieceType match {
-        case Queen =>
-          val colChange = (move.dst.col - move.src.col.toInt).abs
-          val rowChange = (move.dst.row - move.src.row.toInt).abs
-          colChange == rowChange ||
-          (move.dst.col == move.src.col && move.dst.row != move.src.row) ||
-          (move.dst.row == move.src.row && move.dst.col != move.src.col)
-        case King =>
-          val colChange = (move.dst.col - move.src.col.toInt).abs
-          val rowChange = (move.dst.row - move.src.row.toInt).abs
-          colChange <= 1 && rowChange <= 1 && (colChange != 0 || rowChange != 0)
-        case Rook =>
-          (move.dst.col == move.src.col && move.dst.row != move.src.row) ||
-            (move.dst.row == move.src.row && move.dst.col != move.src.col)
-        case Bishop =>
-          val colChange = (move.dst.col - move.src.col.toInt).abs
-          val rowChange = (move.dst.row - move.src.row.toInt).abs
-          colChange == rowChange
-        case Pawn =>
-          val colChange = move.dst.col - move.src.col.toInt
-          val rowChange = (move.dst.row - move.src.row.toInt).abs
-          val canAttack = (state.currentTurn, state.board.get(move.dst)) match {
-            case (White, Some(Piece(_, Black))) =>
-              colChange == 1 && rowChange == 1
-            case (Black, Some(Piece(_, White))) =>
-              colChange == -1 && rowChange == 1
-            case _ => false
-          }
-          canAttack || move.dst.row == move.src.row && (
-            (state.currentTurn == White && colChange == 1) ||
-              (state.currentTurn == Black && colChange == -1)
-          )
-        case Knight =>
-          val colChange = (move.dst.col - move.src.col.toInt).abs
-          val rowChange = (move.dst.row - move.src.row.toInt).abs
-          (colChange == 2 && rowChange == 1) || (rowChange == 2 && colChange == 1)
-      })
-    } getOrElse false
-  }
-
   private def flipPlayer(player: Player): Player = {
     player match {
       case White => Black
@@ -127,13 +85,7 @@ package object game {
     }
   }
 
-  // bishop:
-  // +1 row and col until we hit a piece.
-  // -1 row and col until we hit a piece.
-  // -1 row +1 col until we hit a piece.
-  // +1 row -1 col until we hit a piece.
-
-  private def possibleMoves(
+  def possibleMoves(
       piece: Piece,
       location: Location,
       board: Board
@@ -141,7 +93,8 @@ package object game {
     val moves: HashSet[Location] = HashSet()
 
     val spotIsEmpty = (i: Int, j: Int) => {
-      (location.col + i) <= 8 && (location.row.toInt - 96 + j) <= 8 && (location.col + i) >= 1 && (location.row.toInt - 96 + j) >= 1 &&
+      (location.col + i) <= 8 && (location.row.toInt - 96 + j) <= 8 &&
+        (location.col + i) >= 1 && (location.row.toInt - 96 + j) >= 1 &&
         board
           .get(Location(location.col + i, (location.row + j).toChar))
           .isEmpty
@@ -156,51 +109,74 @@ package object game {
         .exists(_.owner == targetPlayer)
     }
 
-    var i = 1;
+    // todo: turn this into a cool fold
+    val addDiagonalLocations = () => {
+      var i = 1;
+      i = 1; while (spotIsEmpty(i, i)) { addMove(i, i); i += 1 }
+      i = 1; while (spotIsEmpty(i, -i)) { addMove(i, -i); i += 1 }
+      i = 1; while (spotIsEmpty(-i, i)) { addMove(-i, i); i += 1 }
+      i = 1; while (spotIsEmpty(-i, -i)) { addMove(-i, -i); i += 1 }
+    }
+
+    val addHorizontalAndVerticalLocations = () => {
+      var i = 1;
+      i = 1; while (spotIsEmpty(i, 0)) { addMove(i, 0); i += 1 }
+      i = 1; while (spotIsEmpty(0, i)) { addMove(0, i); i += 1 }
+      i = 1; while (spotIsEmpty(-i, 0)) { addMove(-i, 0); i += 1 }
+      i = 1; while (spotIsEmpty(0, -i)) { addMove(0, -i); i += 1 }
+    }
+
+    // TODO: make a helper that's something like, addVerticals/addDiags/addHorizs
     piece.pieceType match {
       case Bishop =>
-        i = 1; while (spotIsEmpty(i, i)) { addMove(i, i); i += 1 }
-        i = 1; while (spotIsEmpty(-i, i)) { addMove(-i, i); i += 1 }
-        i = 1; while (spotIsEmpty(i, -i)) { addMove(i, -i); i += 1 }
-        i = 1; while (spotIsEmpty(-i, -i)) { addMove(-i, -i); i += 1 }
+        addDiagonalLocations()
       case Rook =>
-        i = 1; while (spotIsEmpty(i, 0)) { addMove(i, 0); i += 1 }
-        i = 1; while (spotIsEmpty(0, i)) { addMove(0, i); i += 1 }
-        i = 1; while (spotIsEmpty(-i, 0)) { addMove(-i, 0); i += 1 }
-        i = 1; while (spotIsEmpty(0, -i)) { addMove(0, -i); i += 1 }
+        addHorizontalAndVerticalLocations()
       case Queen =>
-        i = 1; while (spotIsEmpty(i, 0)) { addMove(i, 0); i += 1 }
-        i = 1; while (spotIsEmpty(0, i)) { addMove(0, i); i += 1 }
-        i = 1; while (spotIsEmpty(-i, 0)) { addMove(-i, 0); i += 1 }
-        i = 1; while (spotIsEmpty(0, -i)) { addMove(0, -i); i += 1 }
-        i = 1; while (spotIsEmpty(i, i)) { addMove(i, i); i += 1 }
-        i = 1; while (spotIsEmpty(-i, i)) { addMove(-i, i); i += 1 }
-        i = 1; while (spotIsEmpty(i, -i)) { addMove(i, -i); i += 1 }
-        i = 1; while (spotIsEmpty(-i, -i)) { addMove(-i, -i); i += 1 }
+        addHorizontalAndVerticalLocations()
+        addDiagonalLocations()
       case King =>
-        addMove(1, 0); addMove(0, 1); addMove(-1, 0); addMove(0, -1)
-        addMove(1, 1); addMove(-1, 1); addMove(1, -1); addMove(-1, -1)
+        val offsets = List(-1, 0, 1)
+        for (offsetRow <- offsets) {
+          for (offsetCol <- offsets) {
+            addMove(offsetRow, offsetCol)
+          }
+        }
       case Pawn =>
-        addMove(1, 0)
         piece.owner match {
           case White => {
+            addMove(1, 0)
             if (attackableTarget(1, 1, Black)) addMove(1, 1)
             if (attackableTarget(1, -1, Black)) addMove(1, -1)
           }
           case Black => {
+            addMove(-1, 0)
             if (attackableTarget(-1, 1, White)) addMove(-1, 1)
             if (attackableTarget(-1, -1, White)) addMove(-1, -1)
           }
         }
       case Knight =>
-        addMove(2, 1); addMove(-2, 1); addMove(2, -1); addMove(-2, -1)
-        addMove(1, 2); addMove(-1, 2); addMove(1, -2); addMove(-1, -2)
+        val offsets = List(-2, -1, 1, 2)
+        for (offsetRow <- offsets) {
+          for (offsetCol <- offsets) {
+            if (offsetRow.abs != offsetCol.abs) {
+              addMove(offsetRow, offsetCol)
+            }
+          }
+        }
     }
+    println(moves)
     moves
   }
 
   private def legalMove(state: GameState, move: Move): Boolean = {
-    state.board.get(move.src).exists(_.owner == state.currentTurn)
+    state.board.get(move.src) map { srcPiece =>
+      srcPiece.owner == state.currentTurn && possibleMoves(
+        srcPiece,
+        move.src,
+        state.board
+      ).contains(move.dst)
+    } getOrElse false
   }
 
   def makeMove(state: GameState, move: Move): MoveResult = {

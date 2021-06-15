@@ -5,6 +5,7 @@ import org.scalajs.dom.document
 import org.scalajs.dom.html
 
 import game._
+import movemakers._
 
 object Web {
 
@@ -52,7 +53,6 @@ object Web {
           val command = getCommand(e, canvasLeftTop, viewState)
           gameState = updateGameState(gameState, command)
           viewState = updateViewState(viewState, command)
-
           drawGame(canvasCtx, gameState, viewState)
         }
 
@@ -112,7 +112,20 @@ object Web {
       case DoNothing     => gameState
       case SelectTile(_) => gameState
       case SubmitMove(t1, t2) =>
-        println(t1); println(t2); submitMove(t1, t2, gameState)
+        println(t1); println(t2);
+        val fstState = submitMove(t1, t2, gameState)
+
+        val moveRes = makeMove(
+          fstState,
+          new RandomMoveMaker(Black).getNextMove(fstState).get
+        )
+
+        moveRes match {
+          case InvalidMove => fstState
+          case ValidMove(newState: GameState) =>
+            newState
+        }
+
     }
   }
 
