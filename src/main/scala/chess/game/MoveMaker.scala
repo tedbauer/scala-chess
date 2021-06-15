@@ -35,10 +35,8 @@ class RandomMoveMaker(playerColor: Player) extends MoveMaker {
             gameState.board
           ).isEmpty
         ) {
-          if (true) {
-            done = true
-            p = Some((location, piece))
-          }
+          done = true
+          p = Some((location, piece))
           seen.add(idx)
         }
 

@@ -210,7 +210,9 @@ package object game {
               state.blackPrison
             )
           )
-        } else { InvalidMove }
+        } else {
+          InvalidMove
+        }
       }
     } getOrElse InvalidMove
   }
